@@ -12,9 +12,8 @@ Eu fiz esses testes, e fiz um post no medium sobre que pode ser acessado
 <a href = "">aqui</a>.
 
 Os referentes arquivos relacionados com cada método mencionado no post são:
-\_`Loading_with_csv_from_Xport.ipynb`: _Forma rápida e irregular_
-\_Loading*xpt_files_with_Xport`: \_Forma mediana*
-
+-`Loading_xpt_files_with_Panda`: _Forma rápida e irregular_
+-Loading_xpt_files_with_Xport`: \_Forma mediana*
 - `Loading_with_csv_from_Xport.ipynb` _Forma lenta e garantida_
 
 Os arquivos finais dos dados, nem os arquivos de origem não puderam ser disponibilizados no github por conta do tamanho dos arquivos. Por enquanto, caso queria os arquivos mande um email para mim: phbonamin@gmail.com. No futuro colocarei em um lugar para baixar.
