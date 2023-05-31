@@ -1,3 +1,6 @@
+/*
+JEITO ERRADO DE FAZER: Deixei para documentar meu erro
+
 -- Asthma Status Ok ok
 INSERT INTO AsthmaStatus(ID, ASTHMS1, LTASTH1, CASTHM1)
 SELECT ID, 
@@ -61,7 +64,7 @@ ori.BMI5,
 ori.BMI5CAT,
 ori.RFBMI5
 FROM LLCP2021 AS ori
-INNER JOIN Demographics AS new
+------INNER JOIN Demographics AS new
 ON  ori.ID = new.ID
 WHERE ori.SEXVAR <> new.SEXVAR 
 	 OR ori.INCOME3 <> new.INCOME3
@@ -327,3 +330,5 @@ INNER JOIN UrbanRural AS new
 ON  ori.ID = new.ID
 WHERE ori.METSTAT <> new.METSTAT 
 	 OR ori.URBSTAT <> new.URBSTAT;
+	 
+	 */
