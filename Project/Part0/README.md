@@ -1,15 +1,14 @@
 # Part 0 READ ME
 
-Neste parte do projeto eu converti o arquivo XPORT SAS em um arquivo .csv para que o mesmo pudesse ser colocado dentro do SQL Server.
+Neste parte do projeto converti o arquivo XPORT SAS em um arquivo .csv para que o mesmo pudesse ser colocado dentro do SQL Server.
 
-Eu fiz isso utilizando o pacote XPORT através do terminal. Além, disso usei algumas linhas em um jupyter notebook, no caso o`Loading_with_csv_from_Xport.ipynb`, para ver o estado da conversão.
+Utilizei pacote XPORT através do terminal. Além disso usei algumas linhas em um jupyter notebook, no caso o`Loading_with_csv_from_Xport.ipynb`, para ver o estado da conversão.
 
 ## Medium Post
 
-Além disso, essa parte possui dois outros arquivos que foram testes para eu verificar qual seria a maneira mais rápida de se fazer essa conversão e compara as 3 formas.
+Fiz um post no medium documentando  o processo de  verificar qual seria a maneira mais rápida de se fazer essa conversão e comparando 3 formas de faze-lo.
 
-Eu fiz esses testes, e fiz um post no medium sobre que pode ser acessado
-<a href = "https://phbonamin.medium.com/3-formas-de-utilizar-um-arquivo-sas-xport-xpt-no-pandas-c39fb6a9d57e">aqui</a>.
+O post pode ser acessado <a href = "https://phbonamin.medium.com/3-formas-de-utilizar-um-arquivo-sas-xport-xpt-no-pandas-c39fb6a9d57e">aqui</a>.
 
 Os referentes arquivos relacionados com cada método mencionado no post são:
 - `Loading_xpt_files_with_Panda`: _Forma rápida e irregular_
