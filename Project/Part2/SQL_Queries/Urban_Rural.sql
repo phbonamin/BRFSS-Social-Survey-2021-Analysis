@@ -326,33 +326,357 @@ grupo 3 < 150.000(~28%)
 grupo 4 > 150.000(~11%)
 */
 
-WITH Income_4_divided(ID, INCOME3, INCOME3_Categories) AS (
-    SELECT
-        ID,
-        INCOME3,
+-- Criando temp table
+SELECT
+       ID,
+       INCOME3,
         CASE
             WHEN INCOME3 IN (1, 2, 3, 4, 5) THEN 'Less than $35,000'
-            WHEN INCOME3 IN (6, 7) THEN 'Less than $75,000'
-            WHEN INCOME3 IN (8, 9, 10) THEN 'Less than $150,000'
+            WHEN INCOME3 IN (6, 7) THEN 'Less than $75,000 and more than $35,000'
+            WHEN INCOME3 IN (8, 9, 10) THEN 'Less than $150,000 and more than $75,000'
             WHEN INCOME3 IN (10, 11) THEN '$150,000 or more'
             ELSE NULL
         END AS INCOME3_Categories
-    FROM
-        Demographics
-    WHERE
-        INCOME3 IS NOT NULL
-)
-SELECT
-    INCOME3_Categories,
-    COUNT(*),
-    COUNT(*) * 100 / SUM(COUNT(*)) OVER (PARTITION BY URBSTAT)
+INTO #Income_4_divided
 FROM
-    Income_4_divided
-INNER JOIN UrbanStatus ON UrbanStatus.ID = Income_4_divided.ID
-INNER JOIN AsthmaStatus ON AsthmaStatus.ID = UrbanStatus.ID
-GROUP BY URBSTAT,INCOME3_Categories, ASTHMS1
+    Demographics
+WHERE
+    INCOME3 IS NOT NULL;
+-- Vendo os dados quando a pessoa tem asma
+SELECT
+	URBSTAT,
+CASE 
+	WHEN URBSTAT = 1  THEN 'Urban'
+	WHEN URBSTAT = 2  THEN 'Rural'
+	ELSE NULL END AS  URBSTAT_Categories,
+
+    INCOME3_Categories,
+
+RFHLTH,
+CASE
+	WHEN RFHLTH = 1  THEN 'Good or Better Health'
+	WHEN RFHLTH = 2  THEN 'Fair or Poor Health'
+	ELSE NULL END AS  RFHLTH_Categories,
+
+    COUNT(*) AS COUNT,
+
+    CAST(COUNT(*) * 100 AS FLOAT) / SUM(COUNT(*)) OVER (PARTITION BY URBSTAT,INCOME3_Categories) AS PERCENTAGE
+FROM
+   #Income_4_divided
+INNER JOIN UrbanStatus ON UrbanStatus.ID = #Income_4_divided.ID
+INNER JOIN HealthStatus ON UrbanStatus.ID = HealthStatus.ID
+INNER JOIN AsthmaStatus ON UrbanStatus.ID = AsthmaStatus.ID
+WHERE URBSTAT IS NOT NULL AND 
+RFHLTH IS NOT NULL AND
+ASTHMS1 = 1
+GROUP BY URBSTAT,INCOME3_Categories, RFHLTH
+ORDER BY INCOME3_Categories,URBSTAT,RFHLTH
+-- Vendo os dados quando a pessoa tinha asma mas não tem mais
+SELECT
+	URBSTAT,
+CASE 
+	WHEN URBSTAT = 1  THEN 'Urban'
+	WHEN URBSTAT = 2  THEN 'Rural'
+	ELSE NULL END AS  URBSTAT_Categories,
+
+    INCOME3_Categories,
+
+RFHLTH,
+CASE
+	WHEN RFHLTH = 1  THEN 'Good or Better Health'
+	WHEN RFHLTH = 2  THEN 'Fair or Poor Health'
+	ELSE NULL END AS  RFHLTH_Categories,
+
+    COUNT(*) AS COUNT,
+
+    CAST(COUNT(*) * 100 AS FLOAT) / SUM(COUNT(*)) OVER (PARTITION BY URBSTAT,INCOME3_Categories) AS PERCENTAGE
+FROM
+   #Income_4_divided
+INNER JOIN UrbanStatus ON UrbanStatus.ID = #Income_4_divided.ID
+INNER JOIN HealthStatus ON UrbanStatus.ID = HealthStatus.ID
+INNER JOIN AsthmaStatus ON UrbanStatus.ID = AsthmaStatus.ID
+WHERE URBSTAT IS NOT NULL AND 
+RFHLTH IS NOT NULL AND
+ASTHMS1 = 2
+GROUP BY URBSTAT,INCOME3_Categories, RFHLTH
+ORDER BY INCOME3_Categories,URBSTAT,RFHLTH
+-- Vendo os dados quando a pessoa nunca teve asma
+SELECT
+	URBSTAT,
+CASE 
+	WHEN URBSTAT = 1  THEN 'Urban'
+	WHEN URBSTAT = 2  THEN 'Rural'
+	ELSE NULL END AS  URBSTAT_Categories,
+
+    INCOME3_Categories,
+
+RFHLTH,
+CASE
+	WHEN RFHLTH = 1  THEN 'Good or Better Health'
+	WHEN RFHLTH = 2  THEN 'Fair or Poor Health'
+	ELSE NULL END AS  RFHLTH_Categories,
+
+    COUNT(*) AS COUNT,
+
+    CAST(COUNT(*) * 100 AS FLOAT) / SUM(COUNT(*)) OVER (PARTITION BY URBSTAT,INCOME3_Categories) AS PERCENTAGE
+FROM
+   #Income_4_divided
+INNER JOIN UrbanStatus ON UrbanStatus.ID = #Income_4_divided.ID
+INNER JOIN HealthStatus ON UrbanStatus.ID = HealthStatus.ID
+INNER JOIN AsthmaStatus ON UrbanStatus.ID = AsthmaStatus.ID
+WHERE URBSTAT IS NOT NULL AND 
+RFHLTH IS NOT NULL AND
+ASTHMS1 = 3
+GROUP BY URBSTAT,INCOME3_Categories, RFHLTH
+ORDER BY INCOME3_Categories,URBSTAT,RFHLTH
+
+/*
+Bom, para a saude no geral vimos que o nivel muda conforme a faixa economica porém, 
+as pessoas nas zonas urbanas com apenas 1 exceção( teve asma e tem entre 75 e 35) 
+tem reportado uma maior saúde do que as áreas rurais.
+
+Vamos dar uma olhada agora na saude fisica apenas.
+*/
+
+SELECT
+	URBSTAT,
+CASE 
+	WHEN URBSTAT = 1  THEN 'Urban'
+	WHEN URBSTAT = 2  THEN 'Rural'
+	ELSE NULL END AS  URBSTAT_Categories,
+
+    INCOME3_Categories,
+
+PHYS14D,
+CASE
+	WHEN PHYS14D = 1  THEN 'Zero days when physical health not good'
+	WHEN PHYS14D = 2 THEN '1-13 days when physical health not good'
+	WHEN PHYS14D = 3 THEN '14+ days when physical health not good'
+	ELSE NULL END AS  PHYS14D_Categories,
+
+    COUNT(*) AS COUNT,
+
+    CAST(COUNT(*) * 100 AS FLOAT) / SUM(COUNT(*)) OVER (PARTITION BY URBSTAT,INCOME3_Categories) AS PERCENTAGE
+FROM
+   #Income_4_divided
+INNER JOIN UrbanStatus ON UrbanStatus.ID = #Income_4_divided.ID
+INNER JOIN HealthStatus ON UrbanStatus.ID = HealthStatus.ID
+INNER JOIN AsthmaStatus ON UrbanStatus.ID = AsthmaStatus.ID
+WHERE URBSTAT IS NOT NULL AND 
+PHYS14D IS NOT NULL AND
+ASTHMS1 = 1
+GROUP BY URBSTAT,INCOME3_Categories, PHYS14D
+ORDER BY INCOME3_Categories,URBSTAT,PHYS14D
+-- Vendo os dados quando a pessoa tinha asma mas não tem mais
+SELECT
+	URBSTAT,
+CASE 
+	WHEN URBSTAT = 1  THEN 'Urban'
+	WHEN URBSTAT = 2  THEN 'Rural'
+	ELSE NULL END AS  URBSTAT_Categories,
+
+    INCOME3_Categories,
+
+PHYS14D,
+CASE
+	WHEN PHYS14D = 1  THEN 'Zero days when physical health not good'
+	WHEN PHYS14D = 2 THEN '1-13 days when physical health not good'
+	WHEN PHYS14D = 3 THEN '14+ days when physical health not good'
+	ELSE NULL END AS  PHYS14D_Categories,
+
+    COUNT(*) AS COUNT,
+
+    CAST(COUNT(*) * 100 AS FLOAT) / SUM(COUNT(*)) OVER (PARTITION BY URBSTAT,INCOME3_Categories) AS PERCENTAGE
+FROM
+   #Income_4_divided
+INNER JOIN UrbanStatus ON UrbanStatus.ID = #Income_4_divided.ID
+INNER JOIN HealthStatus ON UrbanStatus.ID = HealthStatus.ID
+INNER JOIN AsthmaStatus ON UrbanStatus.ID = AsthmaStatus.ID
+WHERE URBSTAT IS NOT NULL AND 
+PHYS14D IS NOT NULL AND
+ASTHMS1 = 2
+GROUP BY URBSTAT,INCOME3_Categories, PHYS14D
+ORDER BY INCOME3_Categories,URBSTAT,PHYS14D
+
+-- Vendo os dados quando a pessoa nunca teve asma
+SELECT
+	URBSTAT,
+CASE 
+	WHEN URBSTAT = 1  THEN 'Urban'
+	WHEN URBSTAT = 2  THEN 'Rural'
+	ELSE NULL END AS  URBSTAT_Categories,
+
+    INCOME3_Categories,
+
+PHYS14D,
+CASE
+	WHEN PHYS14D = 1  THEN 'Zero days when physical health not good'
+	WHEN PHYS14D = 2 THEN '1-13 days when physical health not good'
+	WHEN PHYS14D = 3 THEN '14+ days when physical health not good'
+	ELSE NULL END AS  PHYS14D_Categories,
+
+
+    COUNT(*) AS COUNT,
+
+    CAST(COUNT(*) * 100 AS FLOAT) / SUM(COUNT(*)) OVER (PARTITION BY URBSTAT,INCOME3_Categories) AS PERCENTAGE
+FROM
+   #Income_4_divided
+INNER JOIN UrbanStatus ON UrbanStatus.ID = #Income_4_divided.ID
+INNER JOIN HealthStatus ON UrbanStatus.ID = HealthStatus.ID
+INNER JOIN AsthmaStatus ON UrbanStatus.ID = AsthmaStatus.ID
+WHERE URBSTAT IS NOT NULL AND 
+PHYS14D IS NOT NULL AND
+ASTHMS1 = 3
+GROUP BY URBSTAT,INCOME3_Categories, PHYS14D
+ORDER BY INCOME3_Categories,URBSTAT,PHYS14D
+
+/*
+É, aparentemente pessoas que tem asma reportam uma saúde fisica melhor em locais urbanos.
+Em contraste, principalmente aquelas pessoas, que ganham mais de 35000 pelo menos e  que deixaram der ser asmáticas, reportam uma melhor 
+saúde fisica nas zonas rurais. Isso se repete ligeiramente no publico que nunca teve asma.
+*/
+
+
+
 /* Pergunta 1.2 -- Existem uma diferença  no nivel de dificuldade reportada 
 para fazer coisas sozinhas que pessoas com asma ou sem que vivem em zonas rurais vs urbanas ?
 
-Vamos começar com a mais geral, 
+Vamos começar com a mais geral, dificuldade em subir escadas ou andar.
+
+De novo, vemos a mesma tendência, pessoas em zonas urbanas tem uma menor dificuldade em subir 
+escadas ou andar do que as em zonas rurais, independente se tem asma ou não.
 */
+--Pessoas com asma
+SELECT  URBSTAT,
+CASE 
+	WHEN URBSTAT = 1  THEN 'Urban'
+	WHEN URBSTAT = 2  THEN 'Rural'
+	ELSE NULL END AS  URBSTAT_Categories,
+DIFFWALK,
+CASE
+	WHEN DIFFWALK = 1  THEN 'Yes'
+	WHEN DIFFWALK = 2  THEN 'No'
+	ELSE NULL END AS  RFHLTH_Categories,
+COUNT(*),
+count(*) * 100.0 / sum(count(*)) OVER(PARTITION BY URBSTAT)
+FROM UrbanStatus
+INNER JOIN HealthStatus ON UrbanStatus.ID = HealthStatus.ID
+INNER JOIN AsthmaStatus ON UrbanStatus.ID = AsthmaStatus.ID
+WHERE URBSTAT IS NOT NULL
+AND DIFFWALK IS NOT NULL
+AND ASTHMS1 = 1
+GROUP BY URBSTAT,DIFFWALK
+ORDER BY DIFFWALK, URBSTAT
+--Pessoas que já tiveram asma
+SELECT  URBSTAT,
+CASE 
+	WHEN URBSTAT = 1  THEN 'Urban'
+	WHEN URBSTAT = 2  THEN 'Rural'
+	ELSE NULL END AS  URBSTAT_Categories,
+DIFFWALK,
+CASE
+	WHEN DIFFWALK = 1  THEN 'Yes'
+	WHEN DIFFWALK = 2  THEN 'No'
+	ELSE NULL END AS  RFHLTH_Categories,
+COUNT(*),
+count(*) * 100.0 / sum(count(*)) OVER(PARTITION BY URBSTAT)
+FROM UrbanStatus
+INNER JOIN HealthStatus ON UrbanStatus.ID = HealthStatus.ID
+INNER JOIN AsthmaStatus ON UrbanStatus.ID = AsthmaStatus.ID
+WHERE URBSTAT IS NOT NULL
+AND DIFFWALK IS NOT NULL
+AND ASTHMS1 = 2
+GROUP BY URBSTAT,DIFFWALK
+ORDER BY DIFFWALK, URBSTAT
+--Pessoas que não tem asma
+SELECT  URBSTAT,
+CASE 
+	WHEN URBSTAT = 1  THEN 'Urban'
+	WHEN URBSTAT = 2  THEN 'Rural'
+	ELSE NULL END AS  URBSTAT_Categories,
+DIFFWALK,
+CASE
+	WHEN DIFFWALK = 1  THEN 'Yes'
+	WHEN DIFFWALK = 2  THEN 'No'
+	ELSE NULL END AS  RFHLTH_Categories,
+COUNT(*),
+count(*) * 100.0 / sum(count(*)) OVER(PARTITION BY URBSTAT)
+FROM UrbanStatus
+INNER JOIN HealthStatus ON UrbanStatus.ID = HealthStatus.ID
+INNER JOIN AsthmaStatus ON UrbanStatus.ID = AsthmaStatus.ID
+WHERE URBSTAT IS NOT NULL
+AND DIFFWALK IS NOT NULL
+AND ASTHMS1 = 3
+GROUP BY URBSTAT,DIFFWALK
+ORDER BY DIFFWALK, URBSTAT
+
+/* 
+Agora vamos para quem reporta que não consegue fazer nada sozinho sem ajuda
+
+Para o público geral não há diferença, porém, vemos que para o publico que já teve asma ou
+tem asma, a diferença é algo em torno de 2%, sendo que as pessoas em regiões urbanas tem menos
+dificuldade.
+*/
+
+SELECT  URBSTAT,
+CASE 
+	WHEN URBSTAT = 1  THEN 'Urban'
+	WHEN URBSTAT = 2  THEN 'Rural'
+	ELSE NULL END AS  URBSTAT_Categories,
+DIFFALON,
+CASE
+	WHEN DIFFALON= 1  THEN 'Yes'
+	WHEN DIFFALON = 2  THEN 'No'
+	ELSE NULL END AS  RFHLTH_Categories,
+COUNT(*),
+count(*) * 100.0 / sum(count(*)) OVER(PARTITION BY URBSTAT)
+FROM UrbanStatus
+INNER JOIN HealthStatus ON UrbanStatus.ID = HealthStatus.ID
+INNER JOIN AsthmaStatus ON UrbanStatus.ID = AsthmaStatus.ID
+WHERE URBSTAT IS NOT NULL
+AND DIFFALON IS NOT NULL
+AND ASTHMS1 = 1
+GROUP BY URBSTAT,DIFFALON
+ORDER BY DIFFALON, URBSTAT
+--Pessoas que já tiveram asma
+SELECT  URBSTAT,
+CASE 
+	WHEN URBSTAT = 1  THEN 'Urban'
+	WHEN URBSTAT = 2  THEN 'Rural'
+	ELSE NULL END AS  URBSTAT_Categories,
+DIFFALON,
+CASE
+	WHEN DIFFALON = 1  THEN 'Yes'
+	WHEN DIFFALON = 2  THEN 'No'
+	ELSE NULL END AS  RFHLTH_Categories,
+COUNT(*),
+count(*) * 100.0 / sum(count(*)) OVER(PARTITION BY URBSTAT)
+FROM UrbanStatus
+INNER JOIN HealthStatus ON UrbanStatus.ID = HealthStatus.ID
+INNER JOIN AsthmaStatus ON UrbanStatus.ID = AsthmaStatus.ID
+WHERE URBSTAT IS NOT NULL
+AND DIFFALON IS NOT NULL
+AND ASTHMS1 = 2
+GROUP BY URBSTAT,DIFFALON
+ORDER BY DIFFALON, URBSTAT
+--Pessoas que não tem asma
+SELECT  URBSTAT,
+CASE 
+	WHEN URBSTAT = 1  THEN 'Urban'
+	WHEN URBSTAT = 2  THEN 'Rural'
+	ELSE NULL END AS  URBSTAT_Categories,
+DIFFALON,
+CASE
+	WHEN DIFFALON = 1  THEN 'Yes'
+	WHEN DIFFALON = 2  THEN 'No'
+	ELSE NULL END AS  RFHLTH_Categories,
+COUNT(*),
+count(*) * 100.0 / sum(count(*)) OVER(PARTITION BY URBSTAT)
+FROM UrbanStatus
+INNER JOIN HealthStatus ON UrbanStatus.ID = HealthStatus.ID
+INNER JOIN AsthmaStatus ON UrbanStatus.ID = AsthmaStatus.ID
+WHERE URBSTAT IS NOT NULL
+AND DIFFALON IS NOT NULL
+AND ASTHMS1 = 3
+GROUP BY URBSTAT,DIFFALON
+ORDER BY DIFFALON, URBSTAT
