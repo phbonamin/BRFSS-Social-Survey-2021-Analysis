@@ -314,8 +314,43 @@ GROUP BY INCOME3
 
 SELECT *
 , SUM(Percentage) OVER(ORDER BY INCOME3 RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)
-FROM Income_not_null
+FROM Income_not_null;
 
+/*
+Como podemos observar, vai ser dificil separar em 4 quartis, portanto vou tentar fazer o mais próximo 
+disso, porém não será perfeitamente dividido em 4. 
+Vou fazer da seguiente forma:
+grupo 1 < 35.000(~30%)
+grupo 2 < 75.000(~31%)
+grupo 3 < 150.000(~28%)
+grupo 4 > 150.000(~11%)
+*/
+
+WITH Income_4_divided(ID, INCOME3, INCOME3_Categories) AS (
+    SELECT
+        ID,
+        INCOME3,
+        CASE
+            WHEN INCOME3 IN (1, 2, 3, 4, 5) THEN 'Less than $35,000'
+            WHEN INCOME3 IN (6, 7) THEN 'Less than $75,000'
+            WHEN INCOME3 IN (8, 9, 10) THEN 'Less than $150,000'
+            WHEN INCOME3 IN (10, 11) THEN '$150,000 or more'
+            ELSE NULL
+        END AS INCOME3_Categories
+    FROM
+        Demographics
+    WHERE
+        INCOME3 IS NOT NULL
+)
+SELECT
+    INCOME3_Categories,
+    COUNT(*),
+    COUNT(*) * 100 / SUM(COUNT(*)) OVER (PARTITION BY URBSTAT)
+FROM
+    Income_4_divided
+INNER JOIN UrbanStatus ON UrbanStatus.ID = Income_4_divided.ID
+INNER JOIN AsthmaStatus ON AsthmaStatus.ID = UrbanStatus.ID
+GROUP BY URBSTAT,INCOME3_Categories, ASTHMS1
 /* Pergunta 1.2 -- Existem uma diferença  no nivel de dificuldade reportada 
 para fazer coisas sozinhas que pessoas com asma ou sem que vivem em zonas rurais vs urbanas ?
 
