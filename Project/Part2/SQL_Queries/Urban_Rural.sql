@@ -319,7 +319,7 @@ FROM Income_not_null;
 /*
 Como podemos observar, vai ser dificil separar em 4 quartis, portanto vou tentar fazer o mais próximo 
 disso, porém não será perfeitamente dividido em 4. 
-Vou fazer da seguiente forma:
+Vou fazer da seguinte forma:
 grupo 1 < 35.000(~30%)
 grupo 2 < 75.000(~31%)
 grupo 3 < 150.000(~28%)
