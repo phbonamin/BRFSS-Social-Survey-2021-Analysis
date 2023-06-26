@@ -13,15 +13,14 @@ CASE
 	WHEN ASTHMS1  =  2 THEN  'Former'
 	WHEN ASTHMS1 = 3  THEN 'Never'
 	ELSE NULL END AS ASTHMS1_Categories,
-COUNT(ASTHMS1) AS COUNT,
-count(ASTHMS1) * 100.0 / sum(count(ASTHMS1)) OVER(PARTITION BY URBSTAT)
+COUNT(*) AS Count,
+ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(PARTITION BY URBSTAT),2) AS Percentage
 FROM AsthmaStatus 
-INNER JOIN UrbanStatus
-ON AsthmaStatus.ID = UrbanStatus.ID
+INNER JOIN UrbanStatus ON AsthmaStatus.ID = UrbanStatus.ID
 WHERE ASTHMS1 IS NOT NULL
+AND URBSTAT IS NOT NULL
 GROUP BY URBSTAT,ASTHMS1
 ORDER BY URBSTAT,ASTHMS1;
-
 -- Complementando agora para regiões metropolitanas e não metropolitanas - também não tem efeito
 SELECT 
 METSTAT,
@@ -35,12 +34,13 @@ CASE
 	WHEN ASTHMS1  =  2 THEN  'Former'
 	WHEN ASTHMS1 = 3  THEN 'Never'
 	ELSE NULL END AS ASTHMS1_Categories,
-COUNT(ASTHMS1) AS COUNT,
-count(ASTHMS1) * 100.0 / sum(count(ASTHMS1)) OVER(PARTITION BY METSTAT)
+COUNT(*) AS COUNT,
+ROUND(COUNT (*) * 100.0 / SUM(COUNT(*)) OVER(PARTITION BY METSTAT),2) AS Percentage
 FROM AsthmaStatus 
 INNER JOIN UrbanStatus
 ON AsthmaStatus.ID = UrbanStatus.ID
 WHERE ASTHMS1 IS NOT NULL
+AND METSTAT IS NOT NULL
 GROUP BY METSTAT,ASTHMS1
 ORDER BY METSTAT,ASTHMS1;
 
@@ -55,31 +55,9 @@ talvez devido ao maior acesso aos serviçoes de saúde.
 Aqui é com relação a varios tipos de saúde que não só a fisica. 
 */
 
-SELECT  URBSTAT,
-CASE 
-	WHEN URBSTAT = 1  THEN 'Urban'
-	WHEN URBSTAT = 2  THEN 'Rural'
-	ELSE NULL END AS  URBSTAT_Categories,
-RFHLTH,
-CASE
-	WHEN RFHLTH = 1  THEN 'Good or Better Health'
-	WHEN RFHLTH = 2  THEN 'Fair or Poor Health'
-	ELSE NULL END AS  RFHLTH_Categories,
-COUNT(*),
-count(*) * 100.0 / sum(count(*)) OVER(PARTITION BY URBSTAT)
-FROM UrbanStatus
-INNER JOIN HealthStatus 
-ON UrbanStatus.ID = HealthStatus.ID
-WHERE URBSTAT IS NOT NULL
-AND RFHLTH IS NOT NULL
-GROUP BY URBSTAT,RFHLTH
-ORDER BY RFHLTH
+/* Vamos dar uma olhada nas pessoas que tem asma ASTHMS1  = 1
 
-/* Agora vamos comparar com as pessoas que tem asma ASTHMS1  = 1
-
-Aparentemente, a diferença é ainda maior!
-
-Uma coisa a se notar porém, é que a proporção de pessoas que reportaram com uma boa saúde é bem menor.
+Há uma diferença, pessoas nas zonas urbaas aparentemente reportam uma saúde melhor!
 */
 SELECT  URBSTAT,
 CASE 
@@ -91,8 +69,8 @@ CASE
 	WHEN RFHLTH = 1  THEN 'Good or Better Health'
 	WHEN RFHLTH = 2  THEN 'Fair or Poor Health'
 	ELSE NULL END AS  RFHLTH_Categories,
-COUNT(*),
-count(*) * 100.0 / sum(count(*)) OVER(PARTITION BY URBSTAT)
+COUNT(*) AS Count,
+ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(PARTITION BY URBSTAT),2) AS Percentage
 FROM UrbanStatus
 INNER JOIN HealthStatus 
 ON UrbanStatus.ID = HealthStatus.ID
@@ -102,10 +80,18 @@ WHERE URBSTAT IS NOT NULL
 AND RFHLTH IS NOT NULL
 AND ASTHMS1  = 1
 GROUP BY URBSTAT,RFHLTH
-ORDER BY RFHLTH
+ORDER BY URBSTAT,RFHLTH
 
 /* Vamos comparar com as pessoas que tiveram asma mas não tem mais ASTHMS1  = 2
-Seguem mais ou menos a proporção da população geral.
+
+a diferença é menor, algo em torno de 3%, porém segue a mesma ideia, as pessoas que 
+vivem em zonas urbanas tendem a reportar uma maior saúde do que aquelas que vivem em
+zonas rurais. 
+
+Uma coisa a se notar porém é que as pessoas com asma, 
+aparentemente dizem bem menos que estão com uma boa saúde do que as pessoas que tiveram asma. 
+Comparando por exemplo apenas as pessoas de zonas urbanas, vemos uma diferença 
+de algo em torno de 12%.
 */
 
 SELECT  URBSTAT,
@@ -118,8 +104,8 @@ CASE
 	WHEN RFHLTH = 1  THEN 'Good or Better Health'
 	WHEN RFHLTH = 2  THEN 'Fair or Poor Health'
 	ELSE NULL END AS  RFHLTH_Categories,
-COUNT(*),
-count(*) * 100.0 / sum(count(*)) OVER(PARTITION BY URBSTAT)
+COUNT(*) AS Count,
+ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(PARTITION BY URBSTAT),2) AS Percentage
 FROM UrbanStatus
 INNER JOIN HealthStatus 
 ON UrbanStatus.ID = HealthStatus.ID
@@ -129,10 +115,10 @@ WHERE URBSTAT IS NOT NULL
 AND RFHLTH IS NOT NULL
 AND ASTHMS1  = 2
 GROUP BY URBSTAT,RFHLTH
-ORDER BY RFHLTH
+ORDER BY URBSTAT,RFHLTH;
 
 /* Agora as pessoas que nunca tiveram ASTHMS1  = 3
-Também seguem mais ou menos a proporção da população geral.
+A diferença é um pouco menor. Segue aparentemente o mesmo padrão da ASTHMS1  = 2
 */
 SELECT  URBSTAT,
 CASE 
@@ -144,8 +130,8 @@ CASE
 	WHEN RFHLTH = 1  THEN 'Good or Better Health'
 	WHEN RFHLTH = 2  THEN 'Fair or Poor Health'
 	ELSE NULL END AS  RFHLTH_Categories,
-COUNT(*),
-count(*) * 100.0 / sum(count(*)) OVER(PARTITION BY URBSTAT)
+COUNT(*) AS Count,
+ROUND(COUNT(*) * 100.0 / SUM(COUNT(*)) OVER(PARTITION BY URBSTAT),2) AS Percentage
 FROM UrbanStatus
 INNER JOIN HealthStatus 
 ON UrbanStatus.ID = HealthStatus.ID
@@ -155,38 +141,15 @@ WHERE URBSTAT IS NOT NULL
 AND RFHLTH IS NOT NULL
 AND ASTHMS1  = 3
 GROUP BY URBSTAT,RFHLTH
-ORDER BY RFHLTH
+ORDER BY URBSTAT,RFHLTH;
 
 /*
 Agora vamos olhar a saúde fisica apenas.
 PHYS14D
 
-Olhando para o público geral, parece não haver uma diferença.
-Apenas nos 14+ dias de saúde fisica não boa, que ha uma leve diferença.
-*/
-SELECT  URBSTAT,
-CASE 
-	WHEN URBSTAT = 1  THEN 'Urban'
-	WHEN URBSTAT = 2  THEN 'Rural'
-	ELSE NULL END AS  URBSTAT_Categories,
-PHYS14D,
-CASE
-	WHEN PHYS14D = 1  THEN 'Zero days when physical health not good'
-	WHEN PHYS14D = 2 THEN '1-13 days when physical health not good'
-	WHEN PHYS14D = 3 THEN '14+ days when physical health not good'
-	ELSE NULL END AS  PHYS14D_Categories,
-COUNT(*),
-count(*) * 100.0 / sum(count(*)) OVER(PARTITION BY URBSTAT)
-FROM UrbanStatus
-INNER JOIN HealthStatus 
-ON UrbanStatus.ID = HealthStatus.ID
-WHERE URBSTAT IS NOT NULL
-AND PHYS14D IS NOT NULL
-GROUP BY URBSTAT,PHYS14D
-ORDER BY PHYS14D,URBSTAT
 
-/*
-Agora vou olhar para as pessoas com asma igual fizemos no anterior.
+
+Vou olhar para as pessoas com asma igual fizemos no anterior.
 
 Ao contrário do que eu pensava, pessoas que moram nas zonas urbanas reportam mais
 que não tem nenhum dia com a saúde fisica ruim, e reportam menos vezes que tem mais de 
