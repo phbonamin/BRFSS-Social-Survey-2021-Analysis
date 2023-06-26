@@ -13,8 +13,8 @@ CASE
 	WHEN ASTHMS1  =  2 THEN  'Former'
 	WHEN ASTHMS1 = 3  THEN 'Never'
 	ELSE NULL END AS ASTHMS1_Categories,
-COUNT(ASTHMS1) AS COUNT,
-count(ASTHMS1) * 100.0 / sum(count(ASTHMS1)) OVER(PARTITION BY SEXVAR)
+COUNT(*) AS Count,
+count(*) * 100.0 / sum(count(*)) OVER(PARTITION BY SEXVAR) AS Percentage
 FROM AsthmaStatus 
 INNER JOIN Demographics
 ON AsthmaStatus.ID = Demographics.ID
