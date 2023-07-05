@@ -329,3 +329,26 @@ ON AsthmaStatus.ID = Combined_Vape_Smoke_Smokeless.ID
 WHERE ASTHMS1 IS NOT NULL
 GROUP BY Combined_status,ASTHMS1
 ORDER BY Combined_status,ASTHMS1;
+
+/* Vamos dar uma olhada no número de dias que pessoas que pessoam que fumam particionado
+se a pessoa tem asma ou não.
+
+Aparentemente a média se mantém, independente se a pessoa tem asma ou não.
+*/
+
+SELECT
+ASTHMS1,
+CASE 
+	WHEN ASTHMS1  =  1 THEN  'Current'
+	WHEN ASTHMS1  =  2 THEN  'Former'
+	WHEN ASTHMS1 = 3  THEN 'Never'
+	ELSE NULL END AS ASTHMS1_Categories,
+ROUND(AVG(CAST(LCSNUMCG AS FLOAT)),2) AS Mean
+FROM TobaccoUse
+INNER JOIN AsthmaStatus
+ON AsthmaStatus.ID = TobaccoUse.ID
+WHERE RFSMOK3 = 2 
+AND ASTHMS1 IS NOT NULL
+GROUP BY ASTHMS1
+ORDER BY ASTHMS1;
+
