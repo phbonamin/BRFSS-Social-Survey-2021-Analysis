@@ -7,7 +7,7 @@ A conversão do arquivo XPT para csv para inclusão no banco de dados.<br>
 
 Limpeza e transformação de dados com Transact-SQL<br>
 
-## Parte 
+## Parte 2
 Análise exploratória de dados com SQL<br>
 
 Todos as partes tem posts em meu perfil no Medium descrevendo o processo de construção do projeto <br>
